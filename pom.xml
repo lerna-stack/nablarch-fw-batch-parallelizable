@@ -187,6 +187,12 @@
   <!--
     Environment Settings
   -->
+  <scm>
+    <connection>scm:git:https://github.com/lerna-stack/nablarch-fw-batch-parallelizable.git</connection>
+    <developerConnection>scm:git:git@github.com:lerna-stack/nablarch-fw-batch-parallelizable.git</developerConnection>
+    <tag>main</tag>
+    <url>https://github.com/lerna-stack/nablarch-fw-batch-parallelizable</url>
+  </scm>
   <!-- 公開用設定 See https://central.sonatype.org/pages/apache-maven.html -->
   <distributionManagement>
     <snapshotRepository>

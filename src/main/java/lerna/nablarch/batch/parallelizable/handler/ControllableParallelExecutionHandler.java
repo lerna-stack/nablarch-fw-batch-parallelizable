@@ -404,14 +404,38 @@ public class ControllableParallelExecutionHandler extends TransactionEventCallba
 
         final Source<Object, NotUsed> partitionedSource =
                 DataReaderSource.create(context).toMat(
-                    PartitionHub.ofStateful(Object.class, () -> (info, d) -> {
-                        final int executionId = Math.abs(executor.sequentialExecutionId(d).getAsInt() % parallelism);
-                        // 下流でエラーが発生して killSwitch が発動した場合は size が減少して executionId と consumer の ID がずれる。
-                        // そのような状況になると同じ executionId の要素が同時実行されてしまうので、size が変ったときは全ての要素を無視する。
-                        // consumerId として負の値を返すと無視される
-                        return info.size() == parallelism ? info.consumerIdByIdx(executionId) : -1;
-                    }, parallelism, handleDataBufferSize),
-                    Keep.right()
+                        PartitionHub.ofStateful(Object.class, () -> (info, d) -> {
+                            // Consumer identifier として 負の値を返すと要素はドロップされる
+                            // See also https://doc.akka.io/api/akka/2.6.9/akka/stream/javadsl/PartitionHub$.html
+                            final int CONSUMER_IDENTIFIER_TO_DROP_THE_ELEMENT = -1;
+                            try {
+                                final ControllableParallelExecutor.SequentialExecutionIdExtractor executionIdExtractor =
+                                        executor.sequentialExecutionId(d);
+                                if (executionIdExtractor == null) {
+                                    // SequentialExecutionIdExtractor が null の場合には、データを振り分けることができない。
+                                    // 自動的に復旧することは難しいため、Stream 全体を中止し、処理を継続できないことをユーザに通知する。
+                                    final String message =
+                                            String.format(
+                                                    "%s: ControllableParallelExecutor.sequentialExecutionId(element) should not return null.",
+                                                    executor.toString()
+                                            );
+                                    killSwitch.abort(new IllegalStateException(message));
+                                    return CONSUMER_IDENTIFIER_TO_DROP_THE_ELEMENT;
+                                }
+                                final int executionId = Math.abs(executionIdExtractor.getAsInt() % parallelism);
+                                // 下流でエラーが発生して killSwitch が発動した場合は size が減少して executionId と consumer の ID がずれる。
+                                // そのような状況になると同じ executionId の要素が同時実行されてしまうので、size が変ったときは全ての要素を無視する。
+                                return info.size() == parallelism ? info.consumerIdByIdx(executionId) : CONSUMER_IDENTIFIER_TO_DROP_THE_ELEMENT;
+                            } catch (Throwable cause) {
+                                // 次のような理由でデータを振り分ける処理がうまくいかない場合がある。
+                                //  * SequentialExecutionIdExtractor を取得する際に例外が発生した
+                                //  * SequentialExecutionIdExtractor.getAsInt で例外が発生した
+                                // 自動的に復旧することは難しいため、Stream 全体を中止し、処理を継続できないことをユーザに通知する。
+                                killSwitch.abort(cause);
+                                return CONSUMER_IDENTIFIER_TO_DROP_THE_ELEMENT;
+                            }
+                        }, parallelism, handleDataBufferSize),
+                        Keep.right()
                 ).run(actorSystem);
 
         final Supplier<Flow<TransactionalSession, Result, CompletionStage<MultiStatus>>> handleFlow =

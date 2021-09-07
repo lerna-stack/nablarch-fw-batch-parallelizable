@@ -125,6 +125,90 @@ public class ControllableParallelExecutionHandlerTest {
     }
 
     @Test
+    public void ハンドラのSequentialExecutionIdExtractorがnullであれば例外IllegalStateExceptionが親ハンドラにスローされる() {
+        int parallelism = 5;
+
+        ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory((s) -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(s -> new TestTransactionBase());
+
+        ControllableParallelExecutor<String> executor = new TestControllableParallelExecutorBase() {
+            @Override
+            public SequentialExecutionIdExtractor sequentialExecutionId(String element) {
+                return null;
+            }
+        };
+
+        ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(executor);
+
+        // 親ハンドラは handleNext から例外を catch できる
+        final IllegalStateException exception =
+                assertThrows(IllegalStateException.class, () -> context.handleNext("input"));
+        final String expectMessage =
+                String.format("%s: ControllableParallelExecutor.sequentialExecutionId(element) should not return null.", executor.toString());
+        assertThat(exception.getMessage(), is(expectMessage));
+
+    }
+
+    @Test
+    public void ハンドラのSequentialExecutionIdExtractor取得で例外が発生したら親ハンドラにその例外がリスローされる() {
+        int parallelism = 5;
+
+        ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory((s) -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(s -> new TestTransactionBase());
+
+        ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(new TestControllableParallelExecutorBase() {
+            @Override
+            public SequentialExecutionIdExtractor sequentialExecutionId(String element) {
+                throw new ArithmeticException(String.format("Could not create SequentialExecutionIdExtractor from the element(%s).", element));
+            }
+        });
+
+        // 親ハンドラは handleNext から例外を catch できる
+        final ArithmeticException exception =
+                assertThrows(ArithmeticException.class, () -> context.handleNext("input"));
+        assertThat(exception.getMessage(), is("Could not create SequentialExecutionIdExtractor from the element(1)."));
+
+    }
+
+    @Test
+    public void ハンドラのSequentialExecutionIdExtractorで例外が発生したら親ハンドラにその例外がリスローされる() {
+        int parallelism = 5;
+
+        ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory((s) -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(s -> new TestTransactionBase());
+
+        ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(new TestControllableParallelExecutorBase() {
+            @Override
+            public SequentialExecutionIdExtractor sequentialExecutionId(String element) {
+                return new SequentialExecutionIdExtractor() {
+                    @Override
+                    public int getAsInt() {
+                        throw new ArithmeticException(String.format("Could not calculate ID from the element(%s).", element));
+                    }
+                };
+            }
+        });
+
+        // 親ハンドラは handleNext から例外を catch できる
+        final ArithmeticException exception =
+                assertThrows(ArithmeticException.class, () -> context.handleNext("input"));
+        assertThat(exception.getMessage(), is("Could not calculate ID from the element(1)."));
+
+    }
+
+    @Test
     public void interruptでジョブ実行を中断できる() {
         int parallelism = 5;
 

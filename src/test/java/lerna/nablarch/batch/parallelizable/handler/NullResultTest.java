@@ -12,4 +12,10 @@ public class NullResultTest {
         NullResult instance2 = NullResult.getInstance();
         assertThat(instance1, is(instance2));
     }
+
+    @Test
+    public void ShouldBeFailed() {
+        assertThat(1, is(2));
+    }
+
 }

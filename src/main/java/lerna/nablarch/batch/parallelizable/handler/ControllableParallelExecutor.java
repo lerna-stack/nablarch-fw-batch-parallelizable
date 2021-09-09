@@ -25,18 +25,27 @@ public interface ControllableParallelExecutor<IN> extends Handler<IN, Result>, D
     /**
      * 入力データをどの単位で逐次処理するかを定義するためのメソッド。
      *
+     * <p>
+     * このメソッドの実装で例外を throw してはならない。
+     * このメソッドで例外が throw された場合、バッチ処理は中止される。
+     * このメソッドで受け取った element 以外の要素も処理されない可能性がある。
+     *
      * @param element 処理対象の入力データ
-     * @return 逐次処理する{@link SequentialExecutionIdExtractor}
+     * @return 逐次処理する {@link SequentialExecutionIdExtractor}。
+     *         null を返してはならない。このメソッドが null を返す場合、バッチ処理は中止される。
+     *         このメソッドで受け取った element 以外の要素も処理されない可能性がある。
      */
     SequentialExecutionIdExtractor sequentialExecutionId(IN element);
 
     /**
-     * <p>
      * 逐次処理する単位を定義する関数。
-     * </p>
+     *
      * <p>
      * 入力データの種類を識別する ID は int で表される。同じ ID を持つ入力データはそれぞれが並列に処理されず、逐次的に処理されることが保証される。
-     * </p>
+     *
+     * <p>
+     * {@link #getAsInt} で例外を throw してはならない。
+     * 例外が throw された場合、バッチ処理は中止される。
      *
      * @since 2018/04/09
      */

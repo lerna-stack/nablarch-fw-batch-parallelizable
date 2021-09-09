@@ -238,6 +238,9 @@ I/Oバウンドな処理の場合はこの値を⼤きくするにともないCP
 - [アーキテクチャ](docs/architecture.md)
 - [開発ガイド](docs/developers-guide.md)
 
+## Changelog
+注目すべき変更は [CHANGELOG](CHANGELOG.md) から確認できます。
+
 ## License
 
 `nablarch-fw-batch-parallelizable` is released under the terms of the [Apache License Version 2.0](LICENSE.txt).

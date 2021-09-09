@@ -1,9 +1,27 @@
 # nablarch-fw-batch-parallelizable
 
-## Overview
+[![CI](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/workflows/CI/badge.svg?branch=main)](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/actions?query=workflow%3ACI+branch%3Amain)
+
 
 [nablarch-fw-batch](https://github.com/nablarch/nablarch-fw-batch) でバッチ並列実行を実現するカスタムハンドラを提供します。  
 *nablarch-fw-batch* の利用方法については、[公式ドキュメント](https://nablarch.github.io/docs/LATEST/doc/application_framework/application_framework/batch/index.html) をご確認ください。
+
+## Motivation
+
+### 並列化による処理速度改善
+
+処理対象データの増加によるバッチ処理の遅延に対して、処理の並列化は有効な対策の1つです。ベンチマークテストにより、本ライブラリを用いたバッチ処理の多重度を増やすことで処理速度が上がり、vCPUを増やすことでその限界値が上がることが分かっています。
+
+![](img/result_scaleall.png)
+
+- ベンチマークテストの詳細は [「Lernaでバッチ処理を並列化したらリニアに早くなるか検証してみた」](https://fintan.jp/?p=7061) 参照。
+
+
+### 並列化による順序逆転の防止
+
+単純な並列化では入力データの順序の入れ替わりやデータ更新の衝突が生じ、困るケースがあります。本ライブラリでは任意のキーにより入力データを処理するレーンを振り分けることができ、キーの値が同じデータは逐次的に処理されるため順序の逆転などの問題が起こることはありません。
+
+![](img/data_flow.png)
 
 ## Supported JDK versions
 

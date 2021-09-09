@@ -414,10 +414,12 @@ public class ControllableParallelExecutionHandler extends TransactionEventCallba
                                 if (executionIdExtractor == null) {
                                     // SequentialExecutionIdExtractor が null の場合には、データを振り分けることができない。
                                     // 自動的に復旧することは難しいため、Stream 全体を中止し、処理を継続できないことをユーザに通知する。
+                                    final String executorInfo =
+                                            String.format("%s@%s", executor.getClass().getName(), Integer.toHexString(executor.hashCode()));
                                     final String message =
                                             String.format(
                                                     "%s: ControllableParallelExecutor.sequentialExecutionId(element) should not return null.",
-                                                    executor.toString()
+                                                    executorInfo
                                             );
                                     killSwitch.abort(new IllegalStateException(message));
                                     return CONSUMER_IDENTIFIER_TO_DROP_THE_ELEMENT;

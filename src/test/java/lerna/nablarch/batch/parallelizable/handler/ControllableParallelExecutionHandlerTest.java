@@ -147,8 +147,10 @@ public class ControllableParallelExecutionHandlerTest {
         // 親ハンドラは handleNext から例外を catch できる
         final IllegalStateException exception =
                 assertThrows(IllegalStateException.class, () -> context.handleNext("input"));
+        final String executorInfo =
+                String.format("%s@%s", executor.getClass().getName(), Integer.toHexString(executor.hashCode()));
         final String expectMessage =
-                String.format("%s: ControllableParallelExecutor.sequentialExecutionId(element) should not return null.", executor.toString());
+                String.format("%s: ControllableParallelExecutor.sequentialExecutionId(element) should not return null.", executorInfo);
         assertThat(exception.getMessage(), is(expectMessage));
 
     }

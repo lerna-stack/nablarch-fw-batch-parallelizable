@@ -1,5 +1,8 @@
 # nablarch-fw-batch-parallelizable
 
+[![CI](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/workflows/CI/badge.svg?branch=main)](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/actions?query=workflow%3ACI+branch%3Amain)
+
+
 [nablarch-fw-batch](https://github.com/nablarch/nablarch-fw-batch) でバッチ並列実行を実現するカスタムハンドラを提供します。  
 *nablarch-fw-batch* の利用方法については、[公式ドキュメント](https://nablarch.github.io/docs/LATEST/doc/application_framework/application_framework/batch/index.html) をご確認ください。
 

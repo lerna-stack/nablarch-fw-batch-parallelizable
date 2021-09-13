@@ -297,6 +297,59 @@ public class ControllableParallelExecutionHandlerTest {
     }
 
     @Test
+    public void createReaderがnullを返す場合はデータ0件として処理する() {
+        final int parallelism = 5;
+        final ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory(connectionName -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(connectionName -> new TestTransactionBase());
+
+        final AtomicInteger handledCount = new AtomicInteger(0);
+        final ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(new TestControllableParallelExecutorBase() {
+            @Override
+            public DataReader<String> createReader(ExecutionContext executionContext) {
+                return null;
+            }
+            @Override
+            public Result handle(String s, ExecutionContext executionContext) {
+                handledCount.incrementAndGet();
+                return new Result.Success();
+            }
+        });
+
+        final Result result = context.handleNext("input");
+        assertThat(result.isSuccess(), is(true));
+        assertThat(handledCount.get(), is(0));
+    }
+
+    @Test
+    public void createReaderで例外が発生したら親ハンドラにその例外がリスローされる() {
+        final int parallelism = 5;
+        final ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory(connectionName -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(connectionName -> new TestTransactionBase());
+
+        final IllegalStateException expectedException =
+                new IllegalStateException("Could not create a DataReader.");
+
+        final ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(new TestControllableParallelExecutorBase() {
+            @Override
+            public DataReader<String> createReader(ExecutionContext executionContext) {
+                throw expectedException;
+            }
+        });
+
+        final IllegalStateException thrownException =
+                assertThrows(IllegalStateException.class, () -> context.handleNext("input"));
+        assertThat(thrownException, is(expectedException));
+    }
+
+    @Test
     public void executionId毎にcommitIntervalを迎えたときと終了時に1度コミットされる() {
         int numberOfData = 100;
         int parallelism = 10;

@@ -325,6 +325,31 @@ public class ControllableParallelExecutionHandlerTest {
     }
 
     @Test
+    public void createReaderで例外が発生したら親ハンドラにその例外がリスローされる() {
+        final int parallelism = 5;
+        final ControllableParallelExecutionHandler handler = new ControllableParallelExecutionHandler();
+        handler.setParallelism(parallelism);
+        handler.setConnectionFactory(connectionName -> new TestTransactionManagerConnectionBase());
+        handler.setTransactionFactory(connectionName -> new TestTransactionBase());
+
+        final IllegalStateException expectedException =
+                new IllegalStateException("Could not create a DataReader.");
+
+        final ExecutionContext context = new ExecutionContext();
+        context.addHandler(handler);
+        context.addHandler(new TestControllableParallelExecutorBase() {
+            @Override
+            public DataReader<String> createReader(ExecutionContext executionContext) {
+                throw expectedException;
+            }
+        });
+
+        final IllegalStateException thrownException =
+                assertThrows(IllegalStateException.class, () -> context.handleNext("input"));
+        assertThat(thrownException, is(expectedException));
+    }
+
+    @Test
     public void executionId毎にcommitIntervalを迎えたときと終了時に1度コミットされる() {
         int numberOfData = 100;
         int parallelism = 10;

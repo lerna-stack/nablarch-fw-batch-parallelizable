@@ -10,7 +10,7 @@
   -->
   <groupId>com.lerna-stack</groupId>
   <artifactId>nablarch-fw-batch-parallelizable</artifactId>
-  <version>1.2.0</version>
+  <version>1.2.1</version>
   <packaging>jar</packaging>
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>

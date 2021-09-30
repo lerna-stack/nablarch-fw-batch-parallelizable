@@ -7,8 +7,11 @@ nablarch-fw-batch-parallelizable に関する注目すべき変更はこのフ�
 
 ## Unreleased
 
+## [v1.2.1] - 2021-9-30
+[v1.2.1]: https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/compare/v1.2.0...v1.2.1
+
 ### FIXED
-- `ControllableParallelExecutor.sequentialExecutionId` で `null` を返すとバッチ処理が終了しない [#4](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/issues/4)
+- `ControllableParallelExecutor.sequentialExecutionId` で `null` を返すとバッチ処理が終了しない問題を修正しました [#4](https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/issues/4)
 
 ## [v1.2.0] - 2021-3-25
 [v1.2.0]: https://github.com/lerna-stack/nablarch-fw-batch-parallelizable/releases/tag/v1.2.0
